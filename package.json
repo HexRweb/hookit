@@ -4,8 +4,9 @@
   "description": "Application hooks made simple",
   "main": "index.js",
   "scripts": {
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "lint": "xo",
-    "test": "yarn run test:unit",
+    "test": "yarn run lint && yarn run test:unit",
     "test:unit": "nyc --reporter=html --reporter=text mocha --recursive test/unit"
   },
   "repository": {
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "chai": "^4.1.2",
+    "coveralls": "^3.0.2",
     "mocha": "^5.2.0",
     "nyc": "^12.0.2",
     "sinon": "^6.1.4",
@@ -37,14 +39,19 @@
     "rules": {
       "no-use-extend-native/no-use-extend-native": "off"
     },
-    "overrides": [{
-      "files": "test/**/*.js",
-      "envs": ["node", "mocha"],
-      "rules": {
-        "func-names": "off",
-		"prefer-arrow-callback": "off",
-		"no-unused-expressions": "off"
+    "overrides": [
+      {
+        "files": "test/**/*.js",
+        "envs": [
+          "node",
+          "mocha"
+        ],
+        "rules": {
+          "func-names": "off",
+          "prefer-arrow-callback": "off",
+          "no-unused-expressions": "off"
+        }
       }
-    }]
+    ]
   }
 }
