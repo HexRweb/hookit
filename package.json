@@ -1,0 +1,33 @@
+{
+  "name": "@hexr/hookit",
+  "version": "0.0.1",
+  "description": "Application hooks made simple",
+  "main": "index.js",
+  "scripts": {
+    "lint": "xo",
+    "test": "yarn run test:unit",
+    "test:unit": "nyc --reporter=html --reporter=text mocha --recursive test/unit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hexrweb/hookit.git"
+  },
+  "keywords": [
+    "hook",
+    "hooks",
+    "hook-manager"
+  ],
+  "author": "HexR <hello@hexr.org>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hexrweb/hookit/issues"
+  },
+  "homepage": "https://github.com/hexrweb/hookit#readme",
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "nyc": "^12.0.2",
+    "sinon": "^6.1.4",
+    "xo": "^0.21.1"
+  }
+}
