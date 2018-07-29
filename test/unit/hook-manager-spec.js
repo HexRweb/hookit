@@ -21,12 +21,12 @@ describe('Unit > Hook Manager', function () {
 	describe('addHook', function () {
 		it('general functionality', function () {
 			const resolver = sinon.stub();
-			return hm.addHook('testHook', resolver, true).then(() => {
-				expect(hm.hooks.testHook).to.be.ok;
-				expect(hm.hooks.testHook.sync).to.be.true;
-				expect(hm.hooks.testHook.hooks).to.be.an('array').with.lengthOf(0);
-				expect(hm.hooks.testHook.resolver).to.equal(resolver);
-			});
+			hm.addHook('testHook', resolver, true);
+
+			expect(hm.hooks.testHook).to.be.ok;
+			expect(hm.hooks.testHook.sync).to.be.true;
+			expect(hm.hooks.testHook.hooks).to.be.an('array').with.lengthOf(0);
+			expect(hm.hooks.testHook.resolver).to.equal(resolver);
 		});
 
 		it('fails when hook exists', function () {
@@ -36,10 +36,13 @@ describe('Unit > Hook Manager', function () {
 				hooks: []
 			};
 
-			return hm.addHook('existingHook', noop).then(expectError).catch(error => {
+			try {
+				hm.addHook('existingHook', noop);
+				expectError();
+			} catch (error) {
 				expect(error.message).to.equal('Hook existingHook is already registered');
 				expect(error.code).to.equal('EHOOKEXISTS');
-			});
+			}
 		});
 	});
 
@@ -54,38 +57,39 @@ describe('Unit > Hook Manager', function () {
 		});
 
 		it('fails with nonexistent hooks', function () {
-			registerer('nonexistentHook').then(expectError).catch(error => {
+			try {
+				registerer('nonexistentHook');
+				expectError();
+			} catch (error) {
 				expect(error.code).to.equal('ENOHOOK');
 				expect(error.message).to.equal('Hook nonexistentHook doesn\'t exist');
-			});
+			}
 		});
 
 		it('adds one Hook', function () {
 			const fn = sinon.stub();
-			hm.addHook('test', noop).then(() => {
-				expect(hm.hooks.test.hooks).to.have.lengthOf(0);
-				return registerer('test', fn);
-			}).then(() => {
-				expect(hm.hooks.test).to.be.ok;
-				expect(hm.hooks.test.hooks).to.have.lengthOf(1);
-				expect(hm.hooks.test.hooks[0]).to.be.instanceof(Hook);
-				expect(hm.hooks.test.hooks[0].fn).to.equal(fn);
-				expect(hm.hooks.test.hooks[0].caller).to.equal('default');
-			});
+			hm.addHook('test', noop);
+			expect(hm.hooks.test.hooks).to.have.lengthOf(0);
+			registerer('test', fn);
+
+			expect(hm.hooks.test).to.be.ok;
+			expect(hm.hooks.test.hooks).to.have.lengthOf(1);
+			expect(hm.hooks.test.hooks[0]).to.be.instanceof(Hook);
+			expect(hm.hooks.test.hooks[0].fn).to.equal(fn);
+			expect(hm.hooks.test.hooks[0].caller).to.equal('default');
 		});
 
 		it('passes caller to Hook', function () {
 			const fn = sinon.stub();
-			hm.addHook('test', noop).then(() => {
-				expect(hm.hooks.test.hooks).to.have.lengthOf(0);
-				return hm.generateHookRegisterer('hookit-test')('test', fn);
-			}).then(() => {
-				expect(hm.hooks.test).to.be.ok;
-				expect(hm.hooks.test.hooks).to.have.lengthOf(1);
-				expect(hm.hooks.test.hooks[0]).to.be.instanceof(Hook);
-				expect(hm.hooks.test.hooks[0].fn).to.equal(fn);
-				expect(hm.hooks.test.hooks[0].caller).to.equal('hookit-test');
-			});
+			hm.addHook('test', noop);
+			expect(hm.hooks.test.hooks).to.have.lengthOf(0);
+			hm.generateHookRegisterer('hookit-test')('test', fn);
+
+			expect(hm.hooks.test).to.be.ok;
+			expect(hm.hooks.test.hooks).to.have.lengthOf(1);
+			expect(hm.hooks.test.hooks[0]).to.be.instanceof(Hook);
+			expect(hm.hooks.test.hooks[0].fn).to.equal(fn);
+			expect(hm.hooks.test.hooks[0].caller).to.equal('hookit-test');
 		});
 	});
 
@@ -103,12 +107,12 @@ describe('Unit > Hook Manager', function () {
 				const hookA = sinon.stub().callsFake(a => [...a, 'hookA']);
 				const hookB = sinon.stub().callsFake(a => [...a, 'hookB']);
 
-				return hm.addHook('test', noop, true).then(() => {
-					const register = hm.generateHookRegisterer('test');
-					return register('test', hookA).then(() => register('test', hookB));
-				}).then(() =>
-					hm.executeHook('test', [], ['val'], 'argA', 'argB')
-				).then(result => {
+				hm.addHook('test', noop, true);
+				const register = hm.generateHookRegisterer();
+				register('test', hookA);
+				register('test', hookB);
+
+				return hm.executeHook('test', [], ['val'], 'argA', 'argB').then(result => {
 					expect(result).to.deep.equal(['val', 'hookA', 'hookB']);
 					expect(hookA.calledOnce).to.be.true;
 					expect(hookA.calledWithExactly(['val'], 'argA', 'argB')).to.be.true;
@@ -122,14 +126,14 @@ describe('Unit > Hook Manager', function () {
 				const hookB = sinon.stub().throws(new Error('obscureB'));
 				const hookC = sinon.stub().callsFake(a => [...a, 'hookB']);
 
-				return hm.addHook('test', noop, true).then(() => {
-					const register = hm.generateHookRegisterer('test');
-					return register('test', hookA)
-						.then(() => register('test', hookB))
-						.then(() => register('test', hookC));
-				}).then(() =>
-					hm.executeHook('test', [], ['val'])
-				).then(result => {
+				hm.addHook('test', noop, true);
+				const register = hm.generateHookRegisterer();
+
+				register('test', hookA);
+				register('test', hookB);
+				register('test', hookC);
+
+				return hm.executeHook('test', [], ['val']).then(result => {
 					expect(result).to.deep.equal(['val', 'hookB']);
 					expect(hookA.calledOnce).to.be.true;
 					expect(hookB.calledOnce).to.be.true;
@@ -142,11 +146,10 @@ describe('Unit > Hook Manager', function () {
 				const theHook = sinon.stub().rejects(new Error('obscure'));
 				const resolver = sinon.stub();
 
-				return hm.addHook('test', resolver, true).then(() =>
-					hm.generateHookRegisterer('test')('test', theHook)
-				).then(() =>
-					hm.executeHook('test', ['hello', true], ['val'])
-				).then(() => {
+				hm.addHook('test', resolver, true);
+				hm.generateHookRegisterer()('test', theHook);
+
+				return hm.executeHook('test', ['hello', true], ['val']).then(() => {
 					expect(theHook.calledOnce).to.be.true;
 					expect(resolver.calledOnce).to.be.true;
 					expect(resolver.calledWithExactly(['val'], 'hello', true)).to.be.true;
@@ -159,13 +162,11 @@ describe('Unit > Hook Manager', function () {
 				const hookA = sinon.stub().resolves(['test']);
 				const hookB = sinon.stub().returns(['hello']);
 
-				return hm.addHook('test', noop).then(() =>
-					hm.generateHookRegisterer()('test', hookA)
-				).then(() =>
-					hm.generateHookRegisterer('caller')('test', hookB)
-				).then(() =>
-					hm.executeHook('test', false, 'arg1', 'arg2')
-				).then(results => {
+				hm.addHook('test', noop);
+				hm.generateHookRegisterer()('test', hookA);
+				hm.generateHookRegisterer('caller')('test', hookB);
+
+				return hm.executeHook('test', false, 'arg1', 'arg2').then(results => {
 					const expectedResults = [{
 						from: 'default',
 						result: ['test']
@@ -186,13 +187,11 @@ describe('Unit > Hook Manager', function () {
 				const hookA = sinon.stub().rejects(['test']);
 				const hookB = sinon.stub().throws(new Error('hello'));
 
-				return hm.addHook('test', noop).then(() =>
-					hm.generateHookRegisterer()('test', hookA)
-				).then(() =>
-					hm.generateHookRegisterer('caller')('test', hookB)
-				).then(() =>
-					hm.executeHook('test', [], 'arg1', 'arg2')
-				).then(results => {
+				hm.addHook('test', noop);
+				hm.generateHookRegisterer()('test', hookA);
+				hm.generateHookRegisterer('caller')('test', hookB);
+
+				return hm.executeHook('test', [], 'arg1', 'arg2').then(results => {
 					expect(results).to.deep.equal([]);
 					expect(hookA.calledOnce).to.be.true;
 					expect(hookB.calledOnce).to.be.true;
@@ -203,11 +202,10 @@ describe('Unit > Hook Manager', function () {
 				const theHook = sinon.stub().rejects(new Error('obscure'));
 				const resolver = sinon.stub();
 
-				return hm.addHook('test', resolver).then(() =>
-					hm.generateHookRegisterer('test')('test', theHook)
-				).then(() =>
-					hm.executeHook('test', false, 'hookArg')
-				).then(() => {
+				hm.addHook('test', resolver);
+				hm.generateHookRegisterer()('test', theHook);
+
+				return hm.executeHook('test', false, 'hookArg').then(() => {
 					expect(theHook.calledOnce).to.be.true;
 					expect(theHook.calledWithExactly('hookArg')).to.be.true;
 					expect(resolver.calledOnce).to.be.true;
