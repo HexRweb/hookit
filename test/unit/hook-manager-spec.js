@@ -21,7 +21,7 @@ describe('Unit > Hook Manager', function () {
 	describe('addHook', function () {
 		it('general functionality', function () {
 			const resolver = sinon.stub();
-			hm.addHook('testHook', resolver, true);
+			hm.addHook('testHook', true, resolver);
 
 			expect(hm.hooks.testHook).to.be.ok;
 			expect(hm.hooks.testHook.sync).to.be.true;
@@ -37,7 +37,7 @@ describe('Unit > Hook Manager', function () {
 			};
 
 			try {
-				hm.addHook('existingHook', noop);
+				hm.addHook('existingHook');
 				expectError();
 			} catch (error) {
 				expect(error.message).to.equal('Hook existingHook is already registered');
@@ -68,7 +68,7 @@ describe('Unit > Hook Manager', function () {
 
 		it('adds one Hook', function () {
 			const fn = sinon.stub();
-			hm.addHook('test', noop);
+			hm.addHook('test');
 			expect(hm.hooks.test.hooks).to.have.lengthOf(0);
 			registerer('test', fn);
 
@@ -81,7 +81,7 @@ describe('Unit > Hook Manager', function () {
 
 		it('passes caller to Hook', function () {
 			const fn = sinon.stub();
-			hm.addHook('test', noop);
+			hm.addHook('test');
 			expect(hm.hooks.test.hooks).to.have.lengthOf(0);
 			hm.generateHookRegisterer('hookit-test')('test', fn);
 
@@ -107,7 +107,7 @@ describe('Unit > Hook Manager', function () {
 				const hookA = sinon.stub().callsFake(a => [...a, 'hookA']);
 				const hookB = sinon.stub().callsFake(a => [...a, 'hookB']);
 
-				hm.addHook('test', noop, true);
+				hm.addHook('test', true);
 				const register = hm.generateHookRegisterer();
 				register('test', hookA);
 				register('test', hookB);
@@ -126,7 +126,7 @@ describe('Unit > Hook Manager', function () {
 				const hookB = sinon.stub().throws(new Error('obscureB'));
 				const hookC = sinon.stub().callsFake(a => [...a, 'hookB']);
 
-				hm.addHook('test', noop, true);
+				hm.addHook('test', true);
 				const register = hm.generateHookRegisterer();
 
 				register('test', hookA);
@@ -146,7 +146,7 @@ describe('Unit > Hook Manager', function () {
 				const theHook = sinon.stub().rejects(new Error('obscure'));
 				const resolver = sinon.stub();
 
-				hm.addHook('test', resolver, true);
+				hm.addHook('test', true, resolver);
 				hm.generateHookRegisterer()('test', theHook);
 
 				return hm.executeHook('test', ['hello', true], ['val']).then(() => {
@@ -162,7 +162,7 @@ describe('Unit > Hook Manager', function () {
 				const hookA = sinon.stub().resolves(['test']);
 				const hookB = sinon.stub().returns(['hello']);
 
-				hm.addHook('test', noop);
+				hm.addHook('test');
 				hm.generateHookRegisterer()('test', hookA);
 				hm.generateHookRegisterer('caller')('test', hookB);
 
@@ -187,7 +187,7 @@ describe('Unit > Hook Manager', function () {
 				const hookA = sinon.stub().rejects(['test']);
 				const hookB = sinon.stub().throws(new Error('hello'));
 
-				hm.addHook('test', noop);
+				hm.addHook('test');
 				hm.generateHookRegisterer()('test', hookA);
 				hm.generateHookRegisterer('caller')('test', hookB);
 
@@ -202,7 +202,7 @@ describe('Unit > Hook Manager', function () {
 				const theHook = sinon.stub().rejects(new Error('obscure'));
 				const resolver = sinon.stub();
 
-				hm.addHook('test', resolver);
+				hm.addHook('test', false, resolver);
 				hm.generateHookRegisterer()('test', theHook);
 
 				return hm.executeHook('test', false, 'hookArg').then(() => {
