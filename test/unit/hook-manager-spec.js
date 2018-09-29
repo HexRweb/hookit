@@ -213,6 +213,26 @@ describe('Unit > Hook Manager', function () {
 				});
 			});
 		});
+
+		it('returns resolver results', function () {
+			const FRUITS = ['apples', 'oranges', 'grapes'];
+			const theHook = sinon.stub().returns(FRUITS);
+			const resolver = fruits => fruits.reduce((reduced, fruit) => {
+				reduced[fruit] = `${fruit}!`;
+				return reduced;
+			}, {});
+			hm.addHook('test', true, resolver);
+			hm.generateHookRegisterer()('test', theHook);
+
+			return hm.executeHook('test', false, []).then(results => {
+				console.log(results);
+				expect(theHook.calledOnce).to.be.true;
+				expect(results).to.be.an('object');
+				FRUITS.forEach(fruit => {
+					expect(results[fruit]).to.equal(`${fruit}!`);
+				});
+			});
+		});
 	});
 });
 
