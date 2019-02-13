@@ -8,6 +8,8 @@ _Don't like the documentation? Help us make it better by emailing us (hello@hexr
 
 Application hooks made simple
 
+:warning: Hookit is suitable for production, but it's still undergoing usage testing. Due to that, consider any 0.x minor release to be a breaking change and review the changelog before upgrading. Patch releases are backwards compatible with their minor counterpart.
+
 # What? Why?
 
 The ability to extend the functionality of applications is something tech-lovers, developers, and everyone else have wanted. However, providing an easy mechanism for the extension can be cumbersome.
