@@ -25,7 +25,7 @@ describe('Unit > Hook Manager', function () {
 
 			expect(hm.hooks.testHook).to.be.ok;
 			expect(hm.hooks.testHook.sync).to.be.true;
-			expect(hm.hooks.testHook.hooks).to.be.an('array').with.lengthOf(0);
+			expect(hm.hooks.testHook.hooks).to.be.an('array').but.empty;
 			expect(hm.hooks.testHook.resolver).to.equal(resolver);
 		});
 
@@ -69,11 +69,11 @@ describe('Unit > Hook Manager', function () {
 		it('adds one Hook', function () {
 			const fn = sinon.stub();
 			hm.addHook('test');
-			expect(hm.hooks.test.hooks).to.have.lengthOf(0);
+			expect(hm.hooks.test.hooks).to.be.empty;
 			registerer('test', fn);
 
 			expect(hm.hooks.test).to.be.ok;
-			expect(hm.hooks.test.hooks).to.have.lengthOf(1);
+			expect(hm.hooks.test.hooks).to.have.length(1);
 			expect(hm.hooks.test.hooks[0]).to.be.instanceof(Hook);
 			expect(hm.hooks.test.hooks[0].fn).to.equal(fn);
 			expect(hm.hooks.test.hooks[0].caller).to.equal('default');
@@ -82,11 +82,11 @@ describe('Unit > Hook Manager', function () {
 		it('passes caller to Hook', function () {
 			const fn = sinon.stub();
 			hm.addHook('test');
-			expect(hm.hooks.test.hooks).to.have.lengthOf(0);
+			expect(hm.hooks.test.hooks).to.be.empty;
 			hm.generateHookRegisterer('hookit-test')('test', fn);
 
 			expect(hm.hooks.test).to.be.ok;
-			expect(hm.hooks.test.hooks).to.have.lengthOf(1);
+			expect(hm.hooks.test.hooks).to.have.length(1);
 			expect(hm.hooks.test.hooks[0]).to.be.instanceof(Hook);
 			expect(hm.hooks.test.hooks[0].fn).to.equal(fn);
 			expect(hm.hooks.test.hooks[0].caller).to.equal('hookit-test');
@@ -113,7 +113,8 @@ describe('Unit > Hook Manager', function () {
 				register('test', hookB);
 
 				return hm.executeHook('test', [], ['val'], 'argA', 'argB').then(result => {
-					expect(result).to.deep.equal(['val', 'hookA', 'hookB']);
+					expect(result.errors).to.be.an('Array').but.empty;
+					expect(result.results).to.deep.equal(['val', 'hookA', 'hookB']);
 					expect(hookA.calledOnce).to.be.true;
 					expect(hookA.calledWithExactly(['val'], 'argA', 'argB')).to.be.true;
 					expect(hookB.calledOnce).to.be.true;
@@ -134,7 +135,10 @@ describe('Unit > Hook Manager', function () {
 				register('test', hookC);
 
 				return hm.executeHook('test', [], ['val']).then(result => {
-					expect(result).to.deep.equal(['val', 'hookB']);
+					expect(result.errors).to.be.an('Array').with.length(2);
+					expect(result.errors[0].message).to.equal('obscureA');
+					expect(result.errors[1].message).to.equal('obscureB');
+					expect(result.results).to.deep.equal(['val', 'hookB']);
 					expect(hookA.calledOnce).to.be.true;
 					expect(hookB.calledOnce).to.be.true;
 					expect(hookC.calledOnce).to.be.true;
@@ -143,7 +147,8 @@ describe('Unit > Hook Manager', function () {
 			});
 
 			it('calls resolver when finished', function () {
-				const theHook = sinon.stub().rejects(new Error('obscure'));
+				const error = new Error('obscure');
+				const theHook = sinon.stub().rejects(error);
 				const resolver = sinon.stub();
 
 				hm.addHook('test', true, resolver);
@@ -152,7 +157,7 @@ describe('Unit > Hook Manager', function () {
 				return hm.executeHook('test', ['hello', true], ['val']).then(() => {
 					expect(theHook.calledOnce).to.be.true;
 					expect(resolver.calledOnce).to.be.true;
-					expect(resolver.calledWithExactly(['val'], 'hello', true)).to.be.true;
+					expect(resolver.calledWithExactly({errors: [error], results: ['val']}, 'hello', true)).to.be.true;
 				});
 			});
 		});
@@ -167,6 +172,7 @@ describe('Unit > Hook Manager', function () {
 				hm.generateHookRegisterer('caller')('test', hookB);
 
 				return hm.executeHook('test', false, 'arg1', 'arg2').then(results => {
+					expect(results.errors).to.be.an('Array').but.empty;
 					const expectedResults = [{
 						from: 'default',
 						result: ['test']
@@ -175,7 +181,7 @@ describe('Unit > Hook Manager', function () {
 						result: ['hello']
 					}];
 
-					expect(results).to.deep.equal(expectedResults);
+					expect(results.results).to.deep.equal(expectedResults);
 					expect(hookA.calledOnce).to.be.true;
 					expect(hookA.calledWithExactly('arg1', 'arg2')).to.be.true;
 					expect(hookB.calledOnce).to.be.true;
@@ -192,14 +198,16 @@ describe('Unit > Hook Manager', function () {
 				hm.generateHookRegisterer('caller')('test', hookB);
 
 				return hm.executeHook('test', [], 'arg1', 'arg2').then(results => {
-					expect(results).to.deep.equal([]);
+					expect(results.errors).to.be.an('Array').with.length(2);
+					expect(results.results).to.be.an('Array').but.empty;
 					expect(hookA.calledOnce).to.be.true;
 					expect(hookB.calledOnce).to.be.true;
 				});
 			});
 
 			it('calls resolver when finished', function () {
-				const theHook = sinon.stub().rejects(new Error('obscure'));
+				const error = new Error('obscure');
+				const theHook = sinon.stub().rejects(error);
 				const resolver = sinon.stub();
 
 				hm.addHook('test', false, resolver);
@@ -209,7 +217,7 @@ describe('Unit > Hook Manager', function () {
 					expect(theHook.calledOnce).to.be.true;
 					expect(theHook.calledWithExactly('hookArg')).to.be.true;
 					expect(resolver.calledOnce).to.be.true;
-					expect(resolver.calledWithExactly([])).to.be.true;
+					expect(resolver.calledWithExactly({errors: [error], results: []})).to.be.true;
 				});
 			});
 		});
@@ -217,15 +225,19 @@ describe('Unit > Hook Manager', function () {
 		it('returns resolver results', function () {
 			const FRUITS = ['apples', 'oranges', 'grapes'];
 			const theHook = sinon.stub().returns(FRUITS);
-			const resolver = fruits => fruits.reduce((reduced, fruit) => {
-				reduced[fruit] = `${fruit}!`;
-				return reduced;
-			}, {});
+			const resolver = ({errors, results: fruits}) => {
+				expect(errors).to.be.an('Array').but.empty;
+				expect(fruits).to.be.an('Array');
+
+				return fruits.reduce((reduced, fruit) => {
+					reduced[fruit] = `${fruit}!`;
+					return reduced;
+				}, {});
+			};
 			hm.addHook('test', true, resolver);
 			hm.generateHookRegisterer()('test', theHook);
 
 			return hm.executeHook('test', false, []).then(results => {
-				console.log(results);
 				expect(theHook.calledOnce).to.be.true;
 				expect(results).to.be.an('object');
 				FRUITS.forEach(fruit => {

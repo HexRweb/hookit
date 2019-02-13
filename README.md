@@ -56,7 +56,15 @@ the `addHook` method takes 3 arguments - the hook name, whether the hook is sync
 
  - The merger function handles parsing and reducing the data that was provided by all of the hooks. By default, a noop (passthrough) function is used, but you can create your own function. Here's an example of what you might use:
 
-   `const registerComponentsMergerFn = (newComponents, appComponentsList) => appComponentsList.concat(newComponents);`
+   `const registerComponentsMergerFn = (({results: newComponents})), appComponentsList) => appComponentsList.concat(newComponents);`
+
+   The first paramater in the merger function will be an Object with the schema
+   ```json
+    {
+        "errors": [],
+        "results": []
+    }
+   ```
 
    We will go a bit more in depth about the merger function in the `executeHook` section
 
@@ -74,7 +82,7 @@ registerInternalHooks(hooks.generateHookRegisterer());
 
 // Now let your extensions register their hooks
 Object.getOwnPropertyNames(extensions).forEach((extension) => {
-	extensions[extension].registerHooks(hooks.generateHookRegisterer(extension))
+    extensions[extension].registerHooks(hooks.generateHookRegisterer(extension))
 });
 
 // Structure
@@ -90,7 +98,8 @@ There are many use cases for _why_ to use `generateHookRegisterer`, but one of t
 
 ```js
 // arguments are generated / provided in executeHook
-const mountEndpointsMergerFn = (hookResults, myEndpoints) => {
+// for brevity, there is no handling of errors that might occur
+const mountEndpointsMergerFn = ({results: hookResults}, myEndpoints) => {
 // hookResults = [Object: {from: hookName (String), result: hookResult (any)}]
     return hookResults.reduce((endpoints, singleHookResult) => {
         validate(singleHookResult.result);
@@ -117,8 +126,17 @@ Now that your extensions have registered their hooks, it's time to execute the h
 
 // time to register components!
 
-hooks.executeHook('register-components', [myComponents], utilities).then(componentsList => {
-	// (more super awesome application logic)
+hooks.executeHook('register-components', [myComponents], utilities).then(result => {
+    console.log(result) // errors: [], results: []
+    if (errors.length > 0) {
+        // handle hook errors
+    }
+
+    result.results.forEach(newComponent => {
+        // register component
+    });
+
+    // (more super awesome application logic)
 });
 
 // structure for async hooks
@@ -131,7 +149,7 @@ Runtime Hook execution is done through the `executeHook` function of an instanti
 
 Arguments:
  - `hookID` - the ID of the hook; this is the first argument that was passed to addHook (i.e. `beforeSave`)
- - `mergerArgs` - An array of arguments to pass to the merger function. The merger function will be called like `fn(results, ...mergerArgs)`
+ - `mergerArgs` - An array of arguments to pass to the merger function. The merger function will be called like `merge(results, ...mergerArgs)`
  - (Sync only) `initialValue` - the initial value for the resolver. In the `beforeSave` example, this will be the content to be saved (i.e post content)
  - `...hookArgs` - the arguments to be passed to the hook; for sync hooks, the hook will be called like `fn(currentValue, ...hookArgs)`, and for async functions, `fn(...hookArgs)`
 
