@@ -6,8 +6,8 @@ on:
       - master
 jobs:
   test:
+    runs-on: ubuntu-latest    
     strategy:
-      runs-on: ubuntu-latest
       matrix:
         node: [ 10, 12 ]
     env:
