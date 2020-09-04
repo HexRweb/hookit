@@ -1,14 +1,14 @@
 language: node_js
 
 node_js:
-  - "6"
-  - "8"
+  - "10"
+  - "12"
 
 sudo: false
 
 matrix:
   include:
-    - node_js: "8"
+    - node_js: "12"
       env: TEST_SUITE=lint
 
 cache:
@@ -22,4 +22,4 @@ script:
   - if [ "$TEST_SUITE" == "lint" ]; then yarn run lint; else yarn run test; fi
 
 after_success:
-  - if [[ "$TRAVIS_NODE_VERSION" == "8" && "$TEST_SUITE" != "lint" ]]; then yarn run coverage; fi
+  - if [[ "$TRAVIS_NODE_VERSION" == "12" && "$TEST_SUITE" != "lint" ]]; then yarn run coverage; fi
