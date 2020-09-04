@@ -22,5 +22,5 @@ jobs:
       - run: yarn test
       - if: matrix.node == '10'
         run: yarn coverage 
-        with:
+        env:
           COVERALLS_REPO_TOKEN: {{ secrets.COVERALLS_REPO_TOKEN }}
