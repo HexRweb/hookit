@@ -229,11 +229,13 @@ describe('Unit > Hook Manager', function () {
 				expect(errors).to.be.an('Array').but.empty;
 				expect(fruits).to.be.an('Array');
 
+				// eslint-disable-next-line unicorn/no-reduce
 				return fruits.reduce((reduced, fruit) => {
 					reduced[fruit] = `${fruit}!`;
 					return reduced;
 				}, {});
 			};
+
 			hm.addHook('test', true, resolver);
 			hm.generateHookRegisterer()('test', theHook);
 

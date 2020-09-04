@@ -20,11 +20,9 @@ describe('Unit > Hook', function () {
 			const hook = new Hook(fn);
 
 			return hook.executeSync('testing', 'the', ['hook', 'method']).then(result => {
-				/* eslint-disable no-unused-expressions */
 				expect(result).to.equal('hello');
 				expect(fn.calledOnce).to.be.true;
 				expect(fn.calledWithExactly('testing', 'the', ['hook', 'method'])).to.be.true;
-				/* eslint-enable no-unused-expressions */
 			});
 		});
 
@@ -48,10 +46,8 @@ describe('Unit > Hook', function () {
 			hook.executeSync = sinon.stub().resolves();
 
 			return hook.execute('testing', ['the', 'args']).then(() => {
-				/* eslint-disable no-unused-expressions */
 				expect(hook.executeSync.calledOnce).to.be.true;
 				expect(hook.executeSync.calledWithExactly('testing', ['the', 'args'])).to.be.true;
-				/* eslint-enable no-unused-expressions */
 			});
 		});
 
